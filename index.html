@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Exam Writer</title>
+
+    <link rel="manifest" href="manifest.webmanifest">
+    <meta name="theme-color" content="#0f172a" />
+
+    <link rel="icon" href="icons/icon-192.png" />
+    <link rel="stylesheet" href="styles.css" />
+
+    <script defer src="app.js"></script>
+  </head>
+  <body>
+    <header class="appbar">
+      <div class="brand" id="brandHotspot" title="Admin menu (hidden)">📝 Exam Writer</div>
+      <nav class="toolbar" role="toolbar" aria-label="Document actions">
+        <button id="newBtn" title="New (Ctrl+N)">New</button>
+        <button id="openBtn" title="Open (Ctrl+O)">Open…</button>
+        <button id="saveAsBtn" title="Save As (Ctrl+Shift+S)">Save As…</button>
+        <button id="printBtn" title="Print (Ctrl+P)">Print</button>
+        <button id="fullscreenBtn" title="Toggle Full Screen (F11)">Full Screen</button>
+        <button id="themeBtn" title="Toggle theme">Theme</button>
+        <button id="syncBtn" title="Sync to SharePoint now">☁ Sync</button>
+        <span class="spacer" aria-hidden="true"></span>
+        <div class="status">
+          <span id="autosaveStatus" aria-live="polite">Autosave: off</span>
+          <span class="dot" id="dirtyDot" title="Unsaved changes" hidden></span>
+          <span class="sp-banner" data-state="idle">SP: not configured</span>
+        </div>
+      </nav>
+    </header>
+
+    <main>
+      <div class="meta">
+        <label>
+          Center Number
+          <input id="centerNumber" type="text" placeholder="e.g., 12345" />
+        </label>
+        <label>
+          Candidate ID
+          <input id="candidateId" type="text" placeholder="e.g., 123456" />
+        </label>
+        <label>
+          Candidate Name
+          <input id="candidateName" type="text" placeholder="e.g., Jane Doe" />
+        </label>
+        <label>
+          Exam Title
+          <input id="examTitle" type="text" placeholder="e.g., English Paper 2" />
+        </label>
+        <div class="meta-right">
+          <span id="wordCount">0 words</span>
+        </div>
+      </div>
+
+      <section class="editor-shell">
+        <!-- On-screen editor -->
+        <textarea id="editor" placeholder="Save your exam file to begin…" aria-label="Exam text editor"
+          disabled spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off"></textarea>
+
+        <!-- Print-only header (fixed on every page; JS fills values) -->
+        <div id="printHeader" aria-hidden="true">
+          <div class="print-ids">
+            <div><strong>Center Number:</strong> <span id="pCenter"></span></div>
+            <div><strong>Candidate ID:</strong> <span id="pId"></span></div>
+            <div><strong>Candidate Name:</strong> <span id="pName"></span></div>
+            <div><strong>Exam Title:</strong> <span id="pTitle"></span></div>
+          </div>
+          <div class="print-meta">
+            <span id="pDate"></span>
+            <span class="page-number"></span>
+          </div>
+          <hr />
+        </div>
+
+        <!-- Print-only body -->
+        <pre id="printView" aria-hidden="true"></pre>
+      </section>
+    </main>
+
+    <!-- Setup modal -->
+    <dialog id="setupDialog" class="modal" aria-labelledby="setupTitle">
+      <h2 id="setupTitle">📝 Session Setup</h2>
+
+      <div class="setup-tabs">
+        <button class="setup-tab-btn active" data-tab="candidate">Candidate</button>
+        <button class="setup-tab-btn"        data-tab="invigilator">Invigilator ⚙</button>
+      </div>
+
+      <!-- Candidate tab -->
+      <div class="setup-tab-panel" data-tab="candidate">
+        <p>Fill in your details, then choose where to save your exam file.</p>
+        <div class="setup-fields">
+          <label>Center Number * <input id="s_centerNumber"  type="text" placeholder="e.g., 12345"           autocomplete="off" /></label>
+          <label>Candidate ID *   <input id="s_candidateId"  type="text" placeholder="e.g., 123456"          autocomplete="off" /></label>
+          <label>Candidate Name * <input id="s_candidateName" type="text" placeholder="e.g., Jane Doe"       autocomplete="off" /></label>
+          <label>Exam Title *     <input id="s_examTitle"    type="text" placeholder="e.g., English Paper 2" autocomplete="off" /></label>
+        </div>
+        <p>File will be saved as: <code id="filenamePreview">center-candidate-exam-2026-01-01.txt</code></p>
+        <menu>
+          <button id="beginExamBtn" class="primary">Choose save location &amp; begin →</button>
+        </menu>
+      </div>
+
+      <!-- Invigilator tab -->
+      <div class="setup-tab-panel" data-tab="invigilator" hidden>
+        <div id="invigPinGate">
+          <p>Enter invigilator PIN to access controls.</p>
+          <label>PIN <input id="invigPinInput" type="password" inputmode="numeric" /></label>
+          <menu><button id="invigUnlockBtn" class="primary">Unlock</button></menu>
+        </div>
+        <div id="invigControls" hidden>
+          <div class="sp-banner" data-state="idle">SP: not configured</div>
+          <div class="sp-config-status" data-state="missing">Config: not loaded</div>
+
+          <div id="spResumeNotice" class="sp-resume-notice" hidden>
+            <p>📄 Existing file found: <strong class="sp-resume-filename"></strong> (saved <span class="sp-resume-time"></span>)</p>
+            <button id="spResumeBtn" class="sp-resume-btn">Resume this file</button>
+          </div>
+
+          <details class="invig-recovery">
+            <summary>Retrieve file from SharePoint</summary>
+            <label>Candidate ID
+              <input id="invigRecoverCandidateId" type="text" placeholder="e.g., 123456" autocomplete="off" />
+            </label>
+            <menu>
+              <button id="invigRecoverBtn">Retrieve from SharePoint</button>
+            </menu>
+            <div id="invigRecoverStatus" aria-live="polite"></div>
+          </details>
+
+          <p><a href="setup.html" target="_blank">Device setup / config →</a></p>
+        </div>
+      </div>
+    </dialog>
+
+    <!-- Admin modal -->
+    <dialog id="adminDialog" class="modal" aria-labelledby="adminTitle">
+      <h2 id="adminTitle">Administrator</h2>
+      <p>Enter admin PIN to access controls.</p>
+      <label>PIN
+        <input id="adminPin" type="password" inputmode="numeric" pattern="[0-9]*" />
+      </label>
+      <menu>
+        <button id="adminCancel">Cancel</button>
+        <button id="adminUnlock" class="primary">Unlock</button>
+      </menu>
+      <div id="adminPanel" hidden>
+        <hr>
+        <div class="sp-banner" data-state="idle">SP: not configured</div>
+        <div class="sp-config-status" data-state="missing">Config: not loaded</div>
+        <h3>Recovery</h3>
+        <p>Retrieve a candidate's work from SharePoint.</p>
+        <label>Candidate ID
+          <input id="recoverCandidateId" type="text" placeholder="e.g., 123456" autocomplete="off" />
+        </label>
+        <menu>
+          <button id="recoverBtn">Retrieve from SharePoint</button>
+        </menu>
+        <div id="recoverStatus" aria-live="polite"></div>
+        <h3>Session</h3>
+        <menu>
+          <button id="forceSaveBtn">Force save now</button>
+          <button id="nextCandidateBtn">Next candidate / new session</button>
+          <button id="exitAppBtn">Exit app / end session</button>
+        </menu>
+        <small>Shortcut: Ctrl + Shift + E / Ctrl + Alt + K or tap logo 5×</small>
+      </div>
+    </dialog>
+
+    <noscript><p style="padding:1rem;">This app requires JavaScript.</p></noscript>
+  </body>
+</html>

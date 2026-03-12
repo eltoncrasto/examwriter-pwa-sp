@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Exam Writer – Device Setup</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      font: 15px/1.6 system-ui, sans-serif;
+      background: #0b0f1a; color: #e5e7eb;
+      display: flex; align-items: center; justify-content: center; padding: 2rem;
+    }
+    .card {
+      background: #0f172a; border: 1px solid rgba(148,163,184,.2);
+      border-radius: 1rem; padding: 2rem; width: 100%; max-width: 540px;
+    }
+    h1 { margin: 0 0 .2rem; font-size: 1.2rem; }
+    .sub { color: #94a3b8; font-size: .88rem; margin: 0 0 1.5rem; line-height: 1.5; }
+    code { background: rgba(148,163,184,.12); padding: .1rem .3rem; border-radius: .3rem; font-size: .85em; }
+
+    /* Already configured banner */
+    .configured-banner {
+      display: none; margin-bottom: 1.25rem;
+      padding: .75rem 1rem; border-radius: .6rem;
+      background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3);
+      color: #22c55e; font-size: .88rem; line-height: 1.5;
+    }
+    .configured-banner.visible { display: block; }
+    .configured-banner strong { display: block; margin-bottom: .15rem; }
+
+    /* Steps */
+    .steps { counter-reset: step; display: flex; flex-direction: column; gap: 1.25rem; }
+    .step {
+      counter-increment: step;
+      display: grid; grid-template-columns: 2rem 1fr; gap: .75rem; align-items: start;
+    }
+    .step::before {
+      content: counter(step);
+      width: 2rem; height: 2rem; border-radius: 50%;
+      background: #1e293b; border: 1px solid rgba(148,163,184,.25);
+      display: flex; align-items: center; justify-content: center;
+      font-size: .85rem; font-weight: 700; color: #94a3b8; flex-shrink: 0; margin-top: .1rem;
+    }
+    .step.active::before { background: #22c55e; border-color: #22c55e; color: #fff; }
+    .step.done::before   { content: "✓"; background: #14532d; border-color: #22c55e; color: #22c55e; }
+    .step.error::before  { content: "✕"; background: #450a0a; border-color: #ef4444; color: #ef4444; }
+    .step-body { display: flex; flex-direction: column; gap: .5rem; }
+    .step-title { font-weight: 600; font-size: .95rem; }
+    .step-desc  { font-size: .85rem; color: #94a3b8; line-height: 1.5; }
+
+    /* Drop zone */
+    .dropzone {
+      border: 2px dashed rgba(148,163,184,.3); border-radius: .6rem;
+      padding: 1.25rem; text-align: center; cursor: pointer;
+      transition: border-color .2s, background .2s;
+      font-size: .88rem; color: #64748b;
+    }
+    .dropzone:hover, .dropzone.dragover { border-color: #22c55e; background: rgba(34,197,94,.05); color: #e5e7eb; }
+    .dropzone.loaded { border-color: #22c55e; background: rgba(34,197,94,.07); color: #22c55e; }
+    #fileInput { display: none; }
+
+    /* Config preview */
+    .config-preview {
+      background: #0b0f1a; border: 1px solid rgba(148,163,184,.2);
+      border-radius: .5rem; padding: .65rem .85rem;
+      font: .82rem/1.6 ui-monospace, monospace; color: #94a3b8;
+      white-space: pre; display: none;
+    }
+    .config-preview.visible { display: block; }
+    .ok  { color: #22c55e; }
+    .bad { color: #ef4444; }
+
+    /* Buttons */
+    .btn {
+      padding: .5rem 1.1rem; border-radius: .6rem; cursor: pointer;
+      font-size: .92rem; font-weight: 600; border: none; transition: filter .15s;
+    }
+    .btn:hover:not(:disabled) { filter: brightness(1.1); }
+    .btn:disabled { opacity: .4; cursor: not-allowed; filter: none; }
+    .btn-primary   { background: #22c55e; color: #fff; }
+    .btn-secondary { background: #1e293b; color: #e5e7eb; border: 1px solid rgba(148,163,184,.25); }
+    .btn-danger    { background: #ef4444; color: #fff; }
+
+    /* Result */
+    .result { display: none; padding: .8rem 1rem; border-radius: .6rem; font-size: .9rem; line-height: 1.5; margin-top: .6rem; }
+    .result.success { display: block; background: rgba(34,197,94,.1);  border: 1px solid rgba(34,197,94,.35);  color: #22c55e; }
+    .result.error   { display: block; background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.35);  color: #ef4444; }
+
+    hr { border: none; border-top: 1px solid rgba(148,163,184,.15); margin: 1.5rem 0; }
+    .footer { display: flex; gap: .6rem; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>🔧 Exam Writer — Device Setup</h1>
+  <p class="sub">
+    One-time configuration for this Chromebook. Insert the USB drive containing
+    <code>examwriter-config.json</code> and follow the steps below.
+    This only needs to be done once — config persists across reboots.
+  </p>
+
+  <div class="configured-banner" id="configuredBanner">
+    <strong>✓ This device is already configured.</strong>
+    You can re-run setup to update the configuration, or return to Exam Writer.
+    The current config will be shown as masked values in the preview.
+  </div>
+
+  <div class="steps">
+
+    <!-- Step 1: Load file -->
+    <div class="step active" id="step1">
+      <div class="step-body">
+        <div class="step-title">Load configuration file from USB</div>
+        <div class="step-desc">
+          Click below or drag <code>examwriter-config.json</code> from the USB drive onto this area.
+        </div>
+        <div class="dropzone" id="dropzone" role="button" tabindex="0">
+          Click to select <code>examwriter-config.json</code> from USB
+        </div>
+        <input type="file" id="fileInput" accept=".json,application/json" />
+        <div class="config-preview" id="configPreview"></div>
+      </div>
+    </div>
+
+    <!-- Step 2: Save -->
+    <div class="step" id="step2">
+      <div class="step-body">
+        <div class="step-title">Save configuration to this device</div>
+        <div class="step-desc">
+          Config will be saved to this device's local storage.
+          It persists across reboots and Chrome restarts automatically.
+        </div>
+        <button class="btn btn-primary" id="saveBtn" disabled>Save configuration</button>
+        <div class="result" id="result"></div>
+      </div>
+    </div>
+
+  </div>
+
+  <hr />
+
+  <div class="footer">
+    <button class="btn btn-danger" id="clearBtn" style="font-size:.82rem;padding:.35rem .8rem">
+      Clear stored config
+    </button>
+    <a href="index.html" style="text-decoration:none">
+      <button class="btn btn-secondary">← Return to Exam Writer</button>
+    </a>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = "ewConfig";
+  const REQUIRED    = ["clientId","tenantId","username","password","siteUrl","rootFolder","workerUrl","workerSecret"];
+  let parsedConfig  = null;
+
+  // ── Check existing config ──
+  if (localStorage.getItem(STORAGE_KEY)) {
+    document.getElementById("configuredBanner").classList.add("visible");
+  }
+
+  // ── Step helpers ──
+  function stepState(id, state) {
+    const el = document.getElementById(id);
+    el.classList.remove("active","done","error");
+    if (state) el.classList.add(state);
+  }
+
+  // ── File loading ──
+  const dropzone  = document.getElementById("dropzone");
+  const fileInput = document.getElementById("fileInput");
+
+  dropzone.addEventListener("click",   () => fileInput.click());
+  dropzone.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" ") fileInput.click(); });
+  dropzone.addEventListener("dragover",  e => { e.preventDefault(); dropzone.classList.add("dragover"); });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+  dropzone.addEventListener("drop", e => {
+    e.preventDefault(); dropzone.classList.remove("dragover");
+    if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", () => { if (fileInput.files[0]) readFile(fileInput.files[0]); });
+
+  function readFile(file) {
+    const r = new FileReader();
+    r.onload = e => {
+      try { processConfig(JSON.parse(e.target.result)); }
+      catch(err) { showParseError(err.message); }
+    };
+    r.readAsText(file);
+  }
+
+  function processConfig(cfg) {
+    const preview = document.getElementById("configPreview");
+    const missing = REQUIRED.filter(k => !cfg[k]);
+
+    if (missing.length) {
+      preview.innerHTML = `<span class="bad">✕ Missing required fields: ${missing.join(", ")}</span>`;
+      preview.classList.add("visible");
+      stepState("step1","error");
+      parsedConfig = null;
+      document.getElementById("saveBtn").disabled = true;
+      return;
+    }
+
+    // Sanitised preview — mask password, show only hostname
+    let host = cfg.siteUrl;
+    try { host = new URL(cfg.siteUrl).hostname; } catch {}
+
+    preview.innerHTML =
+      `<span class="ok">✓ clientId</span>   ${cfg.clientId.slice(0,8)}…\n` +
+      `<span class="ok">✓ tenantId</span>   ${cfg.tenantId.slice(0,8)}…\n` +
+      `<span class="ok">✓ username</span>   ${cfg.username}\n` +
+      `<span class="ok">✓ password</span>   ${"•".repeat(12)}\n` +
+      `<span class="ok">✓ siteUrl</span>    ${host}\n` +
+      `<span class="ok">✓ rootFolder</span> ${cfg.rootFolder}`;
+    preview.classList.add("visible");
+
+    dropzone.textContent = `✓ ${cfg.username} → ${host}`;
+    dropzone.classList.add("loaded");
+    stepState("step1","done");
+    stepState("step2","active");
+    parsedConfig = cfg;
+    document.getElementById("saveBtn").disabled = false;
+  }
+
+  function showParseError(msg) {
+    const preview = document.getElementById("configPreview");
+    preview.innerHTML = `<span class="bad">✕ Could not read file: ${msg}</span>`;
+    preview.classList.add("visible");
+    stepState("step1","error");
+    parsedConfig = null;
+    document.getElementById("saveBtn").disabled = true;
+  }
+
+  // ── Save ──
+  document.getElementById("saveBtn").addEventListener("click", () => {
+    const btn    = document.getElementById("saveBtn");
+    const result = document.getElementById("result");
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedConfig));
+      stepState("step2","done");
+      result.className = "result success";
+      result.innerHTML = "✓ Configuration saved. You can now return to Exam Writer.<br><strong>Remove the USB drive.</strong>";
+      btn.textContent  = "Saved ✓";
+      btn.disabled     = true;
+      document.getElementById("configuredBanner").classList.add("visible");
+    } catch(e) {
+      result.className = "result error";
+      result.textContent = `Save failed: ${e.message}`;
+    }
+  });
+
+  // ── Clear ──
+  document.getElementById("clearBtn").addEventListener("click", () => {
+    if (!confirm("Clear the stored configuration from this device?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    location.reload();
+  });
+</script>
+</body>
+</html>

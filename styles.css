@@ -1,0 +1,229 @@
+/* THEME VARIABLES */
+:root[data-theme="dark"]{
+  --bg: #0b0f1a;           /* page background */
+  --panel: #0f172a;        /* header/cards */
+  --ink: #e5e7eb;          /* text */
+  --muted: #94a3b8;
+  --accent: #22c55e;
+  --danger: #ef4444;
+  --focus: #60a5fa;
+
+  --editor-bg: #0a1222;    /* editor background */
+  --editor-ink: #e5e7eb;
+}
+:root[data-theme="light"]{
+  --bg: #f5f7fb;
+  --panel: #ffffff;
+  --ink: #0f172a;
+  --muted: #475569;
+  --accent: #0ea5e9;
+  --danger: #dc2626;
+  --focus: #2563eb;
+
+  --editor-bg: #ffffff;
+  --editor-ink: #0f172a;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font: 16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,Arial,sans-serif;
+  color: var(--ink);
+  background: var(--bg);
+}
+
+.appbar {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--panel);
+  border-bottom: 1px solid rgba(148,163,184,.25);
+  padding: .5rem 1rem;
+}
+.brand { font-weight: 700; letter-spacing: .2px; user-select: none; }
+.toolbar { display: flex; align-items: center; gap: .5rem; }
+.toolbar button {
+  background: transparent; color: var(--ink); border: 1px solid rgba(148,163,184,.25);
+  padding: .35rem .7rem; border-radius: .6rem; cursor: pointer;
+}
+.toolbar button:hover { background: rgba(148,163,184,.12); }
+.toolbar .spacer { flex: 1; }
+.status { display: inline-flex; align-items: center; gap: .5rem; color: var(--muted); font-size: .9rem; }
+.status .dot { width: .6rem; height: .6rem; border-radius: 50%; background: var(--danger); display: inline-block; }
+
+/* FULL-WIDTH LAYOUT */
+main { width: 100%; padding: 1rem; }
+.meta {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr)) auto;
+  gap: .75rem; align-items: end; margin-bottom: .75rem;
+}
+.meta label { display: grid; gap: .25rem; color: var(--muted); font-size: .9rem; }
+.meta input {
+  background: var(--panel);
+  border: 1px solid rgba(148,163,184,.25);
+  color: var(--ink);
+  padding: .5rem .6rem; border-radius: .5rem;
+}
+.meta-right { display: flex; gap: 1rem; align-items: center; justify-self: end; color: var(--muted); }
+
+/* EDITOR */
+.editor-shell {
+  background: var(--editor-bg);
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: .8rem;
+  overflow: hidden;
+  width: 100%;
+}
+#editor{
+  width: 100%;
+  min-height: calc(100vh - 220px);
+  background: var(--editor-bg);
+  color: var(--editor-ink);
+  border: none; outline: none; resize: none;
+  padding: 1rem 1.25rem; font-size: 1.05rem; line-height: 1.65;
+  caret-color: var(--accent);
+}
+#editor:disabled { opacity: .65; }
+
+/* Print-only elements hidden on screen */
+#printHeader, #printView, #printContainer { display: none; }
+
+/* PRINT — JS injects #printContainer with .print-page divs */
+@media print {
+  @page { margin: 15mm; }
+
+  html, body { background: white; color: black; margin: 0; padding: 0; }
+
+  /* Hide everything except the injected print container */
+  body > *:not(#printContainer) { display: none !important; }
+
+  #printContainer { display: block !important; }
+
+  .print-page { page-break-after: always; }
+  .print-page:last-child { page-break-after: avoid; }
+
+  .print-page-header {
+    margin-bottom: 4mm;
+    padding-bottom: 2mm;
+  }
+  .print-page-header hr {
+    border: none;
+    border-top: 0.5pt solid #000;
+    margin: 2mm 0 0;
+  }
+  .print-page-ids {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 8mm;
+    row-gap: 0.5mm;
+  }
+  .print-page-ids div { font-size: 10pt; line-height: 1.35; }
+  .print-page-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9pt;
+    margin-top: 1.5mm;
+  }
+  .print-page-body {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font: 12pt/1.6 "Courier New", Courier, monospace;
+  }
+}
+
+/* ══ MODAL BASE ══ */
+.modal {
+  background: var(--panel); color: var(--ink);
+  border: 1px solid rgba(148,163,184,.25);
+  border-radius: 1rem; padding: 1.5rem;
+  max-width: 680px; width: 90vw;
+  box-shadow: 0 8px 32px rgba(0,0,0,.4);
+}
+.modal::backdrop { background: rgba(0,0,0,.55); }
+.modal h2 { margin: 0 0 1rem; }
+.modal h3 { margin: 1.25rem 0 .4rem; font-size: .95rem; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+.modal hr { border: none; border-top: 1px solid rgba(148,163,184,.2); margin: 1rem 0; }
+.modal label { display: grid; gap: .3rem; font-size: .9rem; color: var(--muted); margin-bottom: .75rem; }
+.modal input[type="text"], .modal input[type="password"] {
+  background: var(--bg); color: var(--ink);
+  border: 1px solid rgba(148,163,184,.25);
+  padding: .45rem .6rem; border-radius: .5rem; font-size: 1rem;
+}
+.modal menu { display: flex; gap: .5rem; padding: 0; margin: .5rem 0; flex-wrap: wrap; }
+.modal button {
+  background: transparent; color: var(--ink);
+  border: 1px solid rgba(148,163,184,.25);
+  padding: .4rem .85rem; border-radius: .6rem; cursor: pointer; font-size: .95rem;
+}
+.modal button:hover { background: rgba(148,163,184,.12); }
+.modal button.primary {
+  background: var(--accent); color: #fff; border-color: transparent; font-weight: 600;
+}
+.modal button.primary:hover { filter: brightness(1.1); }
+.modal small { color: var(--muted); font-size: .8rem; }
+
+/* ══ SETUP MODAL TABS ══ */
+.setup-tabs { display: flex; gap: .5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(148,163,184,.2); padding-bottom: .5rem; }
+.setup-tab-btn {
+  background: transparent; color: var(--muted);
+  border: 1px solid transparent; padding: .3rem .75rem; border-radius: .5rem; cursor: pointer;
+}
+.setup-tab-btn.active { color: var(--ink); border-color: rgba(148,163,184,.3); background: rgba(148,163,184,.1); }
+.setup-tab-panel { display: block; }
+.setup-tab-panel[hidden] { display: none; }
+.setup-fields { display: grid; grid-template-columns: 1fr 1fr; gap: .5rem .75rem; margin-bottom: .75rem; }
+.setup-fields label { margin-bottom: 0; }
+#filenamePreview { font-size: .85rem; word-break: break-all; }
+
+/* ══ SP STATUS ══ */
+.sp-banner { font-size: .85rem; padding: .3rem .7rem; border-radius: .5rem; margin-bottom: .5rem; }
+.sp-banner[data-state="idle"]      { background: rgba(148,163,184,.1); color: var(--muted); }
+.sp-banner[data-state="syncing"]   { background: rgba(234,179,8,.15);  color: #ca8a04; }
+.sp-banner[data-state="connected"] { background: rgba(34,197,94,.12);  color: #16a34a; }
+.sp-banner[data-state="error"]     { background: rgba(239,68,68,.12);  color: #dc2626; }
+.sp-config-status { font-size: .8rem; color: var(--muted); margin-bottom: .75rem; }
+.sp-config-status[data-state="ok"]      { color: var(--accent); }
+.sp-config-status[data-state="missing"] { color: var(--danger); }
+
+/* ══ SP RESUME NOTICE ══ */
+.sp-resume-notice {
+  background: rgba(234,179,8,.1); border: 1px solid rgba(234,179,8,.3);
+  border-radius: .6rem; padding: .75rem 1rem; margin: .75rem 0;
+}
+.sp-resume-notice p { margin: 0 0 .5rem; font-size: .9rem; }
+.sp-resume-btn {
+  background: var(--accent); color: #fff; border: none;
+  padding: .35rem .8rem; border-radius: .5rem; cursor: pointer; font-size: .9rem;
+}
+
+/* ══ RECOVERY STATUS ══ */
+#recoverStatus { font-size: .85rem; margin-top: .5rem; color: var(--muted); min-height: 1.2em; }
+
+/* ══ INVIGILATOR RECOVERY ══ */
+.invig-recovery {
+  border: 1px solid rgba(148,163,184,.2);
+  border-radius: .6rem;
+  padding: .5rem .75rem;
+  margin: .75rem 0;
+}
+.invig-recovery summary {
+  cursor: pointer;
+  font-size: .9rem;
+  color: var(--muted);
+  user-select: none;
+  padding: .25rem 0;
+}
+.invig-recovery summary:hover { color: var(--ink); }
+.invig-recovery label { display: grid; gap: .3rem; font-size: .9rem; color: var(--muted); margin-top: .6rem; }
+.invig-recovery input[type="text"] {
+  background: var(--bg); color: var(--ink);
+  border: 1px solid rgba(148,163,184,.25);
+  padding: .4rem .6rem; border-radius: .5rem; font-size: .95rem;
+}
+.invig-recovery menu { padding: 0; margin: .5rem 0 0; display: flex; gap: .5rem; }
+.invig-recovery button {
+  background: var(--accent); color: #fff; border: none;
+  padding: .35rem .8rem; border-radius: .5rem; cursor: pointer; font-size: .9rem;
+}
+#invigRecoverStatus { font-size: .85rem; color: var(--muted); margin-top: .4rem; min-height: 1.2em; }
