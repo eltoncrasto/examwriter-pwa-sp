@@ -511,6 +511,122 @@ function initAdminTriggers() {
   $("#exitAppBtn").addEventListener("click",()=>{try{window.close();}catch{}});
 }
 
+/* ══ DEVICE SETUP MODAL ══ */
+function initDeviceSetup() {
+  const STORAGE_KEY = "ewConfig";
+  const REQUIRED = ["clientId","tenantId","username","password","siteUrl","rootFolder","workerUrl","workerSecret"];
+  let parsedConfig = null;
+
+  const dialog   = $("#deviceSetupDialog");
+  const openBtn  = $("#openDeviceSetupBtn");
+  const closeBtn = $("#dsCloseBtn");
+  const dropzone = $("#dsDropzone");
+  const fileInput= $("#dsFileInput");
+  const preview  = $("#dsConfigPreview");
+  const saveBtn  = $("#dsSaveBtn");
+  const result   = $("#dsResult");
+  const clearBtn = $("#dsClearBtn");
+  const banner   = $("#dsConfiguredBanner");
+
+  function dsStepState(id, state) {
+    const el = document.getElementById(id);
+    el.className = "ds-step" + (state ? " " + state : "");
+  }
+
+  function resetDialog() {
+    parsedConfig = null;
+    dsStepState("dsStep1", "active");
+    dsStepState("dsStep2", "");
+    dropzone.innerHTML = "Click to select <code>examwriter-config.json</code> from USB";
+    dropzone.classList.remove("loaded","dragover");
+    preview.innerHTML = "";
+    preview.classList.remove("visible");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Save configuration";
+    result.className = "ds-result";
+    result.innerHTML = "";
+    fileInput.value = "";
+    banner.hidden = !localStorage.getItem(STORAGE_KEY);
+  }
+
+  openBtn?.addEventListener("click", () => { resetDialog(); dialog.showModal(); });
+  closeBtn?.addEventListener("click", () => dialog.close());
+
+  dropzone.addEventListener("click",   () => fileInput.click());
+  dropzone.addEventListener("keydown", e => { if (e.key==="Enter"||e.key===" ") fileInput.click(); });
+  dropzone.addEventListener("dragover",  e => { e.preventDefault(); dropzone.classList.add("dragover"); });
+  dropzone.addEventListener("dragleave", () => dropzone.classList.remove("dragover"));
+  dropzone.addEventListener("drop", e => {
+    e.preventDefault(); dropzone.classList.remove("dragover");
+    if (e.dataTransfer.files[0]) readFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener("change", () => { if (fileInput.files[0]) readFile(fileInput.files[0]); });
+
+  function readFile(file) {
+    const r = new FileReader();
+    r.onload = e => { try { processConfig(JSON.parse(e.target.result)); } catch(err) { showParseError(err.message); } };
+    r.readAsText(file);
+  }
+
+  function processConfig(c) {
+    const missing = REQUIRED.filter(k => !c[k]);
+    if (missing.length) {
+      preview.innerHTML = `<span class="bad">✕ Missing required fields: ${missing.join(", ")}</span>`;
+      preview.classList.add("visible");
+      dsStepState("dsStep1","error");
+      parsedConfig = null; saveBtn.disabled = true;
+      return;
+    }
+    let host = c.siteUrl;
+    try { host = new URL(c.siteUrl).hostname; } catch {}
+    preview.innerHTML =
+      `<span class="ok">✓ clientId</span>   ${c.clientId.slice(0,8)}…\n` +
+      `<span class="ok">✓ tenantId</span>   ${c.tenantId.slice(0,8)}…\n` +
+      `<span class="ok">✓ username</span>   ${c.username}\n` +
+      `<span class="ok">✓ password</span>   ${"•".repeat(12)}\n` +
+      `<span class="ok">✓ siteUrl</span>    ${host}\n` +
+      `<span class="ok">✓ rootFolder</span> ${c.rootFolder}`;
+    preview.classList.add("visible");
+    dropzone.innerHTML = `✓ ${c.username} → ${host}`;
+    dropzone.classList.add("loaded");
+    dsStepState("dsStep1","done");
+    dsStepState("dsStep2","active");
+    parsedConfig = c; saveBtn.disabled = false;
+  }
+
+  function showParseError(msg) {
+    preview.innerHTML = `<span class="bad">✕ Could not read file: ${msg}</span>`;
+    preview.classList.add("visible");
+    dsStepState("dsStep1","error");
+    parsedConfig = null; saveBtn.disabled = true;
+  }
+
+  saveBtn.addEventListener("click", () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(parsedConfig));
+      dsStepState("dsStep2","done");
+      result.className = "ds-result success";
+      result.innerHTML = "✓ Configuration saved.<br><strong>Remove the USB drive.</strong>";
+      saveBtn.textContent = "Saved ✓"; saveBtn.disabled = true;
+      banner.hidden = false;
+      if (loadConfig()) { setSPStatus("syncing","SP: connecting..."); acquireTokenROPC(); }
+      updateAllSpUI();
+    } catch(e) {
+      result.className = "ds-result error";
+      result.textContent = `Save failed: ${e.message}`;
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    if (!confirm("Clear the stored configuration from this device?")) return;
+    localStorage.removeItem(STORAGE_KEY);
+    cfg = null;
+    setSPStatus("idle","SP: not configured");
+    updateAllSpUI();
+    resetDialog();
+  });
+}
+
 /* ══ SHORTCUTS ══ */
 function bindShortcuts() {
   document.addEventListener("keydown",e=>{
@@ -552,6 +668,7 @@ window.addEventListener("DOMContentLoaded",async()=>{
 
   initSetupModal();
   initAdminTriggers();
+  initDeviceSetup();
 
   const configured=loadConfig();
   if(configured){setSPStatus("syncing","SP: connecting...");await acquireTokenROPC();}

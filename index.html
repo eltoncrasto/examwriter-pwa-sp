@@ -132,7 +132,7 @@
             <div id="invigRecoverStatus" aria-live="polite"></div>
           </details>
 
-          <p><a href="setup.html" target="_blank">Device setup / config →</a></p>
+          <p><button id="openDeviceSetupBtn">Device setup / config →</button></p>
         </div>
       </div>
     </dialog>
@@ -168,6 +168,51 @@
           <button id="exitAppBtn">Exit app / end session</button>
         </menu>
         <small>Shortcut: Ctrl + Shift + E / Ctrl + Alt + K or tap logo 5×</small>
+      </div>
+    </dialog>
+
+    <!-- Device Setup modal -->
+    <dialog id="deviceSetupDialog" class="modal device-setup-modal" aria-labelledby="deviceSetupTitle">
+      <h2 id="deviceSetupTitle">🔧 Device Setup</h2>
+      <p class="ds-sub">
+        One-time configuration for this Chromebook. Insert the USB drive containing
+        <code>examwriter-config.json</code> and follow the steps below.
+        Config persists across reboots.
+      </p>
+
+      <div class="ds-configured-banner" id="dsConfiguredBanner" hidden>
+        <strong>✓ This device is already configured.</strong>
+        You can re-run setup to update the configuration.
+      </div>
+
+      <div class="ds-steps">
+        <!-- Step 1: Load file -->
+        <div class="ds-step active" id="dsStep1">
+          <div class="ds-step-body">
+            <div class="ds-step-title">Load configuration file from USB</div>
+            <div class="ds-step-desc">Click below or drag <code>examwriter-config.json</code> from the USB drive onto this area.</div>
+            <div class="ds-dropzone" id="dsDropzone" role="button" tabindex="0">
+              Click to select <code>examwriter-config.json</code> from USB
+            </div>
+            <input type="file" id="dsFileInput" accept=".json,application/json" />
+            <div class="ds-config-preview" id="dsConfigPreview"></div>
+          </div>
+        </div>
+        <!-- Step 2: Save -->
+        <div class="ds-step" id="dsStep2">
+          <div class="ds-step-body">
+            <div class="ds-step-title">Save configuration to this device</div>
+            <div class="ds-step-desc">Config will be stored in this device's local storage and persists across Chrome restarts.</div>
+            <button class="primary" id="dsSaveBtn" disabled>Save configuration</button>
+            <div class="ds-result" id="dsResult"></div>
+          </div>
+        </div>
+      </div>
+
+      <hr />
+      <div class="ds-footer">
+        <button id="dsClearBtn" class="danger">Clear stored config</button>
+        <button id="dsCloseBtn">Close</button>
       </div>
     </dialog>
 

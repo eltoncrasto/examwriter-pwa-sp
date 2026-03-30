@@ -227,3 +227,54 @@ main { width: 100%; padding: 1rem; }
   padding: .35rem .8rem; border-radius: .5rem; cursor: pointer; font-size: .9rem;
 }
 #invigRecoverStatus { font-size: .85rem; color: var(--muted); margin-top: .4rem; min-height: 1.2em; }
+
+/* ══ DEVICE SETUP MODAL ══ */
+.device-setup-modal { max-width: 560px; }
+.ds-sub { color: var(--muted); font-size: .88rem; margin: 0 0 1.25rem; line-height: 1.5; }
+.ds-configured-banner {
+  margin-bottom: 1.25rem; padding: .75rem 1rem; border-radius: .6rem;
+  background: rgba(34,197,94,.08); border: 1px solid rgba(34,197,94,.3);
+  color: #22c55e; font-size: .88rem; line-height: 1.5;
+}
+.ds-steps { counter-reset: dsstep; display: flex; flex-direction: column; gap: 1.25rem; }
+.ds-step {
+  counter-increment: dsstep;
+  display: grid; grid-template-columns: 2rem 1fr; gap: .75rem; align-items: start;
+}
+.ds-step::before {
+  content: counter(dsstep);
+  width: 2rem; height: 2rem; border-radius: 50%;
+  background: rgba(148,163,184,.1); border: 1px solid rgba(148,163,184,.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: .85rem; font-weight: 700; color: var(--muted); flex-shrink: 0; margin-top: .1rem;
+}
+.ds-step.active::before { background: var(--accent); border-color: var(--accent); color: #fff; }
+.ds-step.done::before   { content: "✓"; background: rgba(34,197,94,.15); border-color: var(--accent); color: var(--accent); }
+.ds-step.error::before  { content: "✕"; background: rgba(239,68,68,.15); border-color: var(--danger); color: var(--danger); }
+.ds-step-body { display: flex; flex-direction: column; gap: .5rem; }
+.ds-step-title { font-weight: 600; font-size: .95rem; color: var(--ink); }
+.ds-step-desc  { font-size: .85rem; color: var(--muted); line-height: 1.5; }
+.ds-dropzone {
+  border: 2px dashed rgba(148,163,184,.3); border-radius: .6rem;
+  padding: 1.25rem; text-align: center; cursor: pointer;
+  transition: border-color .2s, background .2s;
+  font-size: .88rem; color: var(--muted);
+}
+.ds-dropzone:hover, .ds-dropzone.dragover { border-color: var(--accent); background: rgba(34,197,94,.05); color: var(--ink); }
+.ds-dropzone.loaded { border-color: var(--accent); background: rgba(34,197,94,.07); color: var(--accent); }
+#dsFileInput { display: none; }
+.ds-config-preview {
+  background: var(--bg); border: 1px solid rgba(148,163,184,.2);
+  border-radius: .5rem; padding: .65rem .85rem;
+  font: .82rem/1.6 ui-monospace, monospace; color: var(--muted);
+  white-space: pre; display: none;
+}
+.ds-config-preview.visible { display: block; }
+.ds-config-preview .ok  { color: var(--accent); }
+.ds-config-preview .bad { color: var(--danger); }
+.ds-result { display: none; padding: .8rem 1rem; border-radius: .6rem; font-size: .9rem; line-height: 1.5; margin-top: .6rem; }
+.ds-result.success { display: block; background: rgba(34,197,94,.1);  border: 1px solid rgba(34,197,94,.35);  color: var(--accent); }
+.ds-result.error   { display: block; background: rgba(239,68,68,.1);  border: 1px solid rgba(239,68,68,.35);  color: var(--danger); }
+.ds-footer { display: flex; gap: .6rem; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+.modal button.danger { background: var(--danger); color: #fff; border-color: transparent; font-weight: 600; }
+.modal button.danger:hover { filter: brightness(1.1); }
