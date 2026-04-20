@@ -397,7 +397,10 @@ function toggleFullscreen() {
 }
 
 /* ══ EDITOR HARDENING ══ */
+// To disable copy/paste centrally, change `false` to `true` on the next line.
+const BLOCK_COPY_PASTE = false;
 function hardenEditor() {
+  if(!BLOCK_COPY_PASTE) return;
   const ed=$("#editor"); const block=e=>{e.preventDefault();e.stopPropagation();};
   ed.addEventListener("paste",block); ed.addEventListener("drop",block); ed.addEventListener("contextmenu",block);
 }
